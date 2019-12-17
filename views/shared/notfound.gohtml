@@ -1,0 +1,26 @@
+{{define "notfound"}}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Lenslocked.com</title>
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body style="background-color: aquamarine;">
+    <div class="container-fluid">
+        <!-- We use "." to pass all data that was passed to the "bootstrap" template and forward it to the "yield" template.
+            Otherwise the "yield" template wouldn't have access to any data-->
+        {{template "yield" .}}
+        
+        {{template "footer"}}
+    </div>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</body>
+</html>
+{{end}}
