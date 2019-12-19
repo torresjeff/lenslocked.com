@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"github.com/torresjeff/gallery/controllers"
 	"github.com/torresjeff/gallery/middleware"
@@ -48,11 +49,16 @@ func main() {
 	}
 	requireUserMw := middleware.RequireUser{}
 
+	// TODO: update this to be a config variable
+	isProd := false
+	b := []byte("32-byte-long-auth-key")
+	csrfMw := csrf.Protect(b, csrf.Secure(isProd))
+
 	r := mux.NewRouter()
 
 	staticController = controllers.NewStatic()
 	usersController = controllers.NewUsers(services.User)
-	galleriesController = controllers.NewGalleries(services.Gallery, r)
+	galleriesController = controllers.NewGalleries(services.Gallery, services.Image, r)
 
 	// User related routes
 	r.HandleFunc("/signup", usersController.RenderSignUp).Methods("GET")
@@ -70,6 +76,16 @@ func main() {
 	r.HandleFunc("/galleries/{id:[0-9]+}/edit", requireUserMw.ApplyFn(galleriesController.Edit)).Methods("POST")
 	r.HandleFunc("/galleries/{id:[0-9]+}/delete", requireUserMw.ApplyFn(galleriesController.Delete)).Methods("POST")
 	r.HandleFunc("/galleries/{id:[0-9]+}/images", requireUserMw.ApplyFn(galleriesController.ImageUpload)).Methods("POST")
+	r.HandleFunc("/galleries/{id:[0-9]+}/images/{filename}/delete", requireUserMw.ApplyFn(galleriesController.ImageDelete)).Methods("POST")
+
+	// Image routes
+	imageHandler := http.FileServer(http.Dir("./images/"))
+	r.PathPrefix("/images/").Handler(http.StripPrefix("/images/", imageHandler))
+
+	// Asset routes
+	assetHandler := http.FileServer(http.Dir("./assets/"))
+	assetHandler = http.StripPrefix("/assets/", assetHandler)
+	r.PathPrefix("/assets/").Handler(assetHandler)
 
 	// Routes for static content
 	r.Handle("/", staticController.HomeView).Methods("GET")
@@ -79,5 +95,5 @@ func main() {
 
 	// Apply our user middleware before our router even routes a user to the appropriate page,
 	// guaranteeing that the user is set in the request context if they are logged in.
-	log.Fatal(http.ListenAndServe(":3000", userMw.Apply(r)))
+	log.Fatal(http.ListenAndServe(":3000", csrfMw(userMw.Apply(r))))
 }

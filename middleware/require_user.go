@@ -3,6 +3,7 @@ package middleware
 import (
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/torresjeff/gallery/context"
 	"github.com/torresjeff/gallery/models"
@@ -56,6 +57,13 @@ func (mw *RequireUser) Apply(next http.Handler) http.HandlerFunc {
 
 func (mw *RequireUser) ApplyFn(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+		// If the user is requesting a static asset or image we will not need to lookup the current user so we skip doing that.
+		// Keep in mind this means that any user with the URl to an image can view it even if he's not logged in
+		if strings.HasPrefix(path, "/assets/") || strings.HasPrefix(path, "/images/") {
+			next(w, r)
+			return
+		}
 		user := context.User(r.Context())
 		if user == nil {
 			http.Redirect(w, r, "/login?redirect="+url.QueryEscape(r.URL.Path), http.StatusFound)

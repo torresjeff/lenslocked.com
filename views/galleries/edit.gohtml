@@ -1,8 +1,11 @@
 {{define "yield"}}
 <div class="row">
     <div class="col-md-10 col-md-offset-1">
-        <h2>Edit your gallery</h3>
-            <hr>
+        <h2>Edit your gallery</h2>
+        <a href="/galleries/{{.ID}}">
+            View this gallery
+        </a>
+        <hr>
     </div>
     <div class="col-md-12">
         {{template "editGalleryForm" .}}
@@ -34,10 +37,19 @@
 </div>
 {{end}}
 {{define "galleryImages"}}
-<p>Coming soon...</p>
+{{range .ImagesSplitN 6}}
+<div class="col-md-2">
+    {{range .}}
+    <a href="{{.Path}}">
+        <img src="{{.Path}}" class="thumbnail">
+    </a>
+    {{template "deleteImageForm" .}}
+    {{end}}
+</div>
+{{end}}
 {{end}}
 {{define "editGalleryForm"}}
-<form action="/galleries/{{.ID}}/update" method="POST" class="form-horizontal">
+<form action="/galleries/{{.ID}}/edit" method="POST" class="form-horizontal">
     <div class="form-group">
         <label for="title" class="col-md-1 control-label">Title</label>
         <div class="col-md-10">
@@ -48,6 +60,7 @@
             <button type="submit" class="btn btn-default">Save</button>
         </div>
     </div>
+    {{csrfField}}
 </form>
 {{end}}
 {{define "deleteGalleryForm"}}
@@ -57,6 +70,7 @@
             <button type="submit" class="btn btn-danger">Delete</button>
         </div>
     </div>
+    {{csrfField}}
 </form>
 {{end}}
 {{define "uploadImageForm"}}
@@ -69,5 +83,14 @@
             <button type="submit" class="btn btn-default">Upload</button>
         </div>
     </div>
+    {{csrfField}}
+</form>
+{{end}}
+{{define "deleteImageForm"}}
+<form action="/galleries/{{.GalleryID}}/images/{{.Filename}}/delete" method="POST">
+    <button type="submit" class="btn btn-default btn-delete">
+        Delete
+    </button>
+    {{csrfField}}
 </form>
 {{end}}

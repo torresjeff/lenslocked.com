@@ -2,11 +2,13 @@ package views
 
 import (
 	"bytes"
+	"errors"
 	"html/template"
 	"io"
 	"net/http"
 	"path/filepath"
 
+	"github.com/gorilla/csrf"
 	"github.com/torresjeff/gallery/context"
 )
 
@@ -25,7 +27,17 @@ func NewView(layout string, files ...string) *View {
 	addTemplatePath(files)
 	addTemplateExt(files)
 	files = append(files, sharedFiles()...)
-	t, err := template.ParseFiles(files...)
+	// t, err := template.ParseFiles(files...)
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// New("") gives us a template that we can add a function to before finally parsing our files
+	t, err := template.New("").Funcs(template.FuncMap{
+		"csrfField": func() (template.HTML, error) {
+			return "", errors.New("csrfField is not implemented")
+		},
+	}).ParseFiles(files...)
 	if err != nil {
 		panic(err)
 	}
@@ -58,7 +70,16 @@ func (v *View) Render(w http.ResponseWriter, r *http.Request, data interface{}) 
 
 	vd.User = context.User(r.Context())
 	var buf bytes.Buffer
-	err := v.Template.ExecuteTemplate(&buf, v.Layout, vd)
+
+	// Create the CSRF field using the current request
+	csrfField := csrf.TemplateField(r)
+	templ := v.Template.Funcs(template.FuncMap{
+		"csrfField": func() template.HTML {
+			// Use this closure to return the CSRF Field for any templates that need to access it
+			return csrfField
+		},
+	})
+	err := templ.ExecuteTemplate(&buf, v.Layout, vd)
 	if err != nil {
 		http.Error(w, "Something went wrong. If the problem persists, please email support@lenslocked.com", http.StatusInternalServerError)
 		return

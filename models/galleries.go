@@ -9,8 +9,9 @@ const (
 
 type Gallery struct {
 	gorm.Model
-	UserID uint   `gorm:"not null;index"`
-	Title  string `gorm:"not null"`
+	UserID uint    `gorm:"not null;index"`
+	Title  string  `gorm:"not null"`
+	Images []Image `gorm:"-"`
 }
 
 type GalleryDB interface {
@@ -49,6 +50,20 @@ func NewGalleryService(db *gorm.DB) GalleryService {
 			},
 		},
 	}
+}
+
+func (g *Gallery) ImagesSplitN(n int) [][]Image {
+	// Create our 2D slice
+	ret := make([][]Image, n)
+	for i := 0; i < n; i++ {
+		ret[i] = make([]Image, 0)
+	}
+
+	for i, img := range g.Images {
+		ret[i%n] = append(ret[i%n], img)
+	}
+
+	return ret
 }
 
 func (gg *galleryGorm) Create(gallery *Gallery) error {
