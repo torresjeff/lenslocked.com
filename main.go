@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -33,8 +34,17 @@ func must(err error) {
 }
 
 func main() {
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
-	services, err := models.NewServices(psqlInfo)
+	prod := flag.Bool("prod", false, "Provide this flag in production. This ensures that a config.json file is provided before the application starts.")
+	flag.Parse()
+	config := LoadConfig(*prod)
+	dbConfig := config.Database
+	services, err := models.NewServices(
+		models.WithGorm(dbConfig.Dialect(), dbConfig.ConnectionInfo()),
+		models.WithLogMode(true),
+		models.WithUser(config.Pepper, config.HMACKey),
+		models.WithGallery(),
+		models.WithImage(),
+	)
 	// us, err := models.NewUserService(psqlInfo)
 	if err != nil {
 		panic(err)
@@ -49,10 +59,8 @@ func main() {
 	}
 	requireUserMw := middleware.RequireUser{}
 
-	// TODO: update this to be a config variable
-	isProd := false
 	b := []byte("32-byte-long-auth-key")
-	csrfMw := csrf.Protect(b, csrf.Secure(isProd))
+	csrfMw := csrf.Protect(b, csrf.Secure(config.IsProd()))
 
 	r := mux.NewRouter()
 
@@ -95,5 +103,6 @@ func main() {
 
 	// Apply our user middleware before our router even routes a user to the appropriate page,
 	// guaranteeing that the user is set in the request context if they are logged in.
-	log.Fatal(http.ListenAndServe(":3000", csrfMw(userMw.Apply(r))))
+	fmt.Println("Starting the server on port", config.Port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), csrfMw(userMw.Apply(r))))
 }
