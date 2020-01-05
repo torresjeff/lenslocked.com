@@ -126,6 +126,7 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 
 	var vd views.Data
 	var form SignUpForm
+	vd.Yield = &form
 	if err := parseForm(r, &form); err != nil {
 		vd.SetAlert(err)
 		u.SignUpView.Render(w, r, vd)
