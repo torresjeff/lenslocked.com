@@ -9,5 +9,10 @@
         "user": "postgres",
         "password": "password",
         "name": "lenslocked_dev"
+    },
+    "mailgun": {
+        "api_key": "5c082e1a4c8a55d95ffbe403b8bba32b-6f4beb0a-c2e2a199",
+        "public_api_key": "pubkey-2a7809c2c9d7e40772cf801fabfbc1ab",
+        "domain": "your-domain-setup-with-mailgun"
     }
 }

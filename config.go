@@ -36,6 +36,13 @@ func (c PostgresConfig) ConnectionInfo() string {
 	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", c.Host, c.Port, c.User, c.Password, c.Name)
 }
 
+//----------------- MAILGUN CONFIG -----------------//
+type MailgunConfig struct {
+	APIKey       string `json:"api_key"`
+	PublicAPIKey string `json:"public_api_key"`
+	Domain       string `json:"domain"`
+}
+
 //----------------- APP CONFIG -----------------//
 type Config struct {
 	Port     int            `json:"port"`
@@ -43,6 +50,7 @@ type Config struct {
 	Pepper   string         `json:"pepper"`
 	HMACKey  string         `json:"hmac_key"`
 	Database PostgresConfig `json:"database"`
+	Mailgun  MailgunConfig  `json:"mailgun"`
 }
 
 func (c Config) IsProd() bool {
