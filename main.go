@@ -74,6 +74,7 @@ func main() {
 	r.HandleFunc("/login", usersController.RenderLogin).Methods("GET")
 	r.HandleFunc("/login", usersController.Login).Methods("POST")
 	r.HandleFunc("/cookie", usersController.CookieTest).Methods("GET")
+	r.HandleFunc("/logout", usersController.Logout).Methods("POST")
 
 	// Gallery related routes
 	r.HandleFunc("/galleries", requireUserMw.ApplyFn(galleriesController.RenderIndex)).Methods("GET").Name(controllers.IndexGalleries)

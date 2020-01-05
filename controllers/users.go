@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 
+	"github.com/torresjeff/gallery/context"
 	"github.com/torresjeff/gallery/models"
 	"github.com/torresjeff/gallery/rand"
 	"github.com/torresjeff/gallery/views"
@@ -165,4 +167,24 @@ func (u *Users) CookieTest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Fprintln(w, user)
+}
+
+func (u *Users) Logout(w http.ResponseWriter, r *http.Request) {
+	// Expire the user's sessions cookie
+	cookie := http.Cookie{
+		Name:     "remember_token",
+		Value:    "",
+		Expires:  time.Now(),
+		HttpOnly: true,
+	}
+	http.SetCookie(w, &cookie)
+
+	// Update the user with a new remember token
+	user := context.User(r.Context())
+	token, _ := rand.RememberToken()
+	user.RememberToken = token
+	u.us.Update(user)
+
+	// Send the user to the home pag
+	http.Redirect(w, r, "/", http.StatusFound)
 }
